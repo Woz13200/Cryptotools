@@ -1,49 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function App() {
-  const [wallet, setWallet] = useState('');
-  const [result, setResult] = useState(null);
-  const [promo, setPromo] = useState('');
+  const [data, setData] = useState([]);
 
-  const checkWallet = async () => {
-    if (promo !== 'MOZFREE100') {
-      setResult({ error: 'Code promo invalide.' });
-      return;
-    }
-    const res = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ wallet }),
-    });
-    const data = await res.json();
-    setResult(data);
-  };
+  useEffect(() => {
+    fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd")
+      .then(res => res.json())
+      .then(coins => {
+        const tracked = ['bitcoin', 'ethereum', 'tether', 'ripple', 'binancecoin', 'solana', 'usd-coin', 'dogecoin', 'tron', 'cardano'];
+        const filtered = coins.filter(c => tracked.includes(c.id));
+        setData(filtered);
+      });
+  }, []);
 
   return (
-    <div className="min-h-screen bg-black text-yellow-300 p-4">
-      <h1 className="text-red-600 text-3xl mb-4">CryptoLeakX 🔥</h1>
-      <input
-        className="bg-gray-900 text-white p-2 rounded mb-2 block"
-        placeholder="Wallet Phantom"
-        onChange={(e) => setWallet(e.target.value)}
-      />
-      <input
-        className="bg-gray-900 text-white p-2 rounded mb-4 block"
-        placeholder="Code Promo"
-        onChange={(e) => setPromo(e.target.value)}
-      />
-      <button onClick={checkWallet} className="bg-red-600 text-white p-2 rounded">
-        Vérifier
-      </button>
-      {result && (
-        <div className="mt-4">
-          {result.error ? (
-            <p className="text-red-400">{result.error}</p>
-          ) : (
-            <pre>{JSON.stringify(result, null, 2)}</pre>
-          )}
-        </div>
-      )}
+    <div className="min-h-screen bg-black text-yellow-400 p-4">
+      <h1 className="text-3xl font-bold text-red-600 mb-4">🔥 CryptoLeakX™ Tracker 🔥</h1>
+      <table className="w-full border text-sm">
+        <thead className="bg-red-900 text-yellow-300">
+          <tr>
+            <th className="p-2 border">Nom</th>
+            <th className="p-2 border">Prix ($)</th>
+            <th className="p-2 border">Variation 24h</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map(coin => (
+            <tr key={coin.id} className="text-center border-b">
+              <td className="p-2">{coin.name}</td>
+              <td className="p-2">${coin.current_price.toLocaleString()}</td>
+              <td className={`p-2 ${coin.price_change_percentage_24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {coin.price_change_percentage_24h?.toFixed(2)} %
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
