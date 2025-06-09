@@ -1,45 +1,57 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function CryptoLeakXApp() {
-  const [unlocked, setUnlocked] = useState(false);
-  const [code, setCode] = useState("");
+  const [coins, setCoins] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const checkPromo = () => {
-    if (code.trim().toLowerCase() === "mohammedfree") {
-      setUnlocked(true);
-    } else {
-      alert("Code promo invalide !");
-    }
-  };
+  useEffect(() => {
+    fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc")
+      .then((res) => res.json())
+      .then((data) => {
+        setCoins(data.slice(0, 10));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-center bg-black text-red-500 p-4">
-      <h1 className="text-4xl font-bold mb-4 text-yellow-400">CryptoLeakX - Intelligence Crypto Suprême</h1>
-      {!unlocked ? (
-        <>
-          <p className="mb-4 text-white">Veuillez entrer votre code promo pour accéder à l’outil :</p>
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="Code promo"
-            className="p-2 border border-yellow-500 rounded mb-4"
-          />
-          <button onClick={checkPromo} className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">
-            Valider
-          </button>
-        </>
+    <div className="bg-black text-yellow-300 min-h-screen p-6">
+      <h1 className="text-4xl font-bold text-red-600 mb-6">🔥 CryptoLeakX™ Tracker 🔥</h1>
+      {loading ? (
+        <p className="text-red-500">Chargement des données...</p>
       ) : (
-        <div className="text-white">
-          <h2 className="text-2xl mb-2 text-red-400">Bienvenue !</h2>
-          <p className="mb-4">Analyse en cours des tendances crypto en temps réel...</p>
-          <ul className="list-disc list-inside">
-            <li>Analyse de portefeuilles</li>
-            <li>Alertes coins dormants</li>
-            <li>Graphiques intelligents</li>
-            <li>Recommandations IA</li>
-          </ul>
-        </div>
+        <table className="w-full table-auto border border-yellow-400">
+          <thead>
+            <tr className="text-yellow-200 bg-red-900">
+              <th className="p-2">Nom</th>
+              <th className="p-2">Prix ($)</th>
+              <th className="p-2">Variation 24h</th>
+              <th className="p-2">Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {coins.map((coin) => (
+              <tr key={coin.id} className="text-center hover:bg-red-800">
+                <td className="p-2">{coin.name}</td>
+                <td className="p-2">${coin.current_price.toFixed(2)}</td>
+                <td
+                  className={`p-2 ${
+                    coin.price_change_percentage_24h >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {coin.price_change_percentage_24h.toFixed(2)}%
+                </td>
+                <td className="p-2">
+                  {Math.round(
+                    (coin.market_cap_rank * 100) / coin.market_cap
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
